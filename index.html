@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ONE-SHOT</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="min-h-screen bg-gray-50 text-gray-800">
+
+    <!-- Header -->
+    <header class="bg-gray-800 text-white shadow">
+        <div class="mx-auto max-w-6xl px-4 py-3 flex items-center gap-3">
+            <img class="w-[100px] h-[50px] rounded" src="photo_2025-07-12_20-37-04.jpg">
+            <div class="ml-auto flex gap-4 items-center">
+                <a href="summary.html"
+                    class="px-3 py-1.5 bg-emerald-600 rounded-lg text-white text-sm font-medium hover:bg-emerald-700 transition">
+                    Summary
+                </a>
+                <div id="nowText" class="text-sm text-gray-200 opacity-80"></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main -->
+    <main class="mx-auto max-w-6xl p-4 space-y-6">
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            <!-- LEFT: Menu -->
+            <div class="bg-white rounded-xl shadow border border-gray-200 p-4">
+                <h2 class="text-lg font-semibold mb-3 text-gray-700">Menu</h2>
+                <div class="mb-4">
+                    <h3 class="text-sm font-medium text-gray-500 mb-2">Food</h3>
+                    <div id="foodButtons" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
+                </div>
+                <div>
+                    <h3 class="text-sm font-medium text-gray-500 mb-2">Drinks</h3>
+                    <div id="drinkButtons" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
+                </div>
+            </div>
+
+            <!-- RIGHT: Ticket -->
+            <div class="bg-white rounded-xl shadow border border-gray-200 p-4 flex flex-col">
+                <h2 class="text-lg font-semibold mb-3 text-gray-700">Ticket</h2>
+                <div class="flex-1 overflow-auto border border-gray-200 rounded-lg">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-100">
+                            <tr class="text-left text-gray-600">
+                                <th class="px-3 py-2">Item</th>
+                                <th class="px-3 py-2 w-16">Qty</th>
+                                <th class="px-3 py-2 w-20">Price</th>
+                                <th class="px-3 py-2 w-24">Line Total</th>
+                                <th class="px-3 py-2 w-16"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="ticketBody"></tbody>
+                    </table>
+                    <div id="emptyTicketHint" class="p-4 text-center text-gray-400 text-sm">Add items from the menu.
+                    </div>
+                </div>
+                <div class="mt-4 flex items-center gap-3">
+                    <div class="ml-auto text-right">
+                        <div class="text-xs uppercase tracking-wide text-gray-500">Total</div>
+                        <div id="ticketTotal" class="text-2xl font-bold text-gray-800">$0.00</div>
+                    </div>
+                </div>
+                <div class="mt-3 grid grid-cols-2 gap-3">
+                    <button id="clearBtn"
+                        class="py-2.5 rounded-lg font-semibold bg-gray-200 text-gray-700 hover:bg-gray-300 transition">
+                        Clear
+                    </button>
+                    <button id="finalizeBtn"
+                        class="py-2.5 rounded-lg font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition">
+                        Finalize
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Inline JS -->
+    <script>
+        const STORAGE_KEY = 'simplePosSales';
+        let MENU = [];
+        let ticket = [];
+        let finalizeLock = false;
+
+        const $ = (sel) => document.querySelector(sel);
+        function fmtCurrency(n) { return n.toLocaleString(undefined, { style: 'currency', currency: 'USD' }); }
+        function todayStr() { return new Date().toISOString().slice(0, 10); }
+        function loadSales() { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+        function saveSales(arr) { localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); }
+
+        // Build Menu
+        function buildMenu() {
+            const foodWrap = $('#foodButtons'), drinkWrap = $('#drinkButtons');
+            foodWrap.innerHTML = ''; drinkWrap.innerHTML = '';
+            MENU.forEach(item => {
+                const btn = document.createElement('button');
+                btn.className = `w-full aspect-[7/3] text-white font-semibold rounded-lg shadow text-sm sm:text-base transition ${item.category === 'Food'
+                    ? 'bg-orange-500 hover:bg-orange-600'
+                    : 'bg-gray-600 hover:bg-gray-700'
+                    }`;
+                btn.textContent = `${item.name}\n${fmtCurrency(item.price)}`;
+                btn.style.whiteSpace = 'pre-line';
+                btn.addEventListener('pointerup', () => addItem(item));
+                (item.category === 'Food' ? foodWrap : drinkWrap).appendChild(btn);
+            });
+        }
+
+        function addItem(item) {
+            const existing = ticket.find(it => it.name === item.name);
+            if (existing) existing.qty++;
+            else ticket.push({ name: item.name, price: item.price, category: item.category, qty: 1 });
+            renderTicket();
+        }
+
+        function renderTicket() {
+            const body = $('#ticketBody'); body.innerHTML = '';
+            $('#emptyTicketHint').classList.toggle('hidden', ticket.length > 0);
+            let total = 0;
+            ticket.forEach((it, idx) => {
+                const lineTotal = it.price * it.qty; total += lineTotal;
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+          <td class="px-3 py-2">${it.name}</td>
+          <td class="px-3 py-2">${it.qty}</td>
+          <td class="px-3 py-2">${fmtCurrency(it.price)}</td>
+          <td class="px-3 py-2">${fmtCurrency(lineTotal)}</td>
+          <td class="px-3 py-2 text-right"><button class="text-rose-600 hover:text-rose-800">-</button></td>`;
+                tr.querySelector('button').addEventListener('pointerup', () => {
+                    it.qty--; if (it.qty <= 0) ticket.splice(idx, 1); renderTicket();
+                });
+                body.appendChild(tr);
+            });
+            $('#ticketTotal').textContent = fmtCurrency(total);
+        }
+
+        function clearTicket() { ticket = []; renderTicket(); }
+
+        function finalizeSale() {
+            if (finalizeLock) return;
+            finalizeLock = true;
+
+            if (!ticket.length) {
+                alert('No items');
+                finalizeLock = false;
+                return;
+            }
+
+            const id = Date.now(), date = todayStr();
+            const items = ticket.map(it => ({ name: it.name, price: it.price, qty: it.qty }));
+            const categorySummary = ticket.reduce((a, it) => { a[it.category] = (a[it.category] || 0) + it.qty; return a; }, { Food: 0, Drink: 0 });
+            const totalAmount = ticket.reduce((s, it) => s + (it.price * it.qty), 0);
+
+            const sales = loadSales();
+            sales.push({ id, date, items, categorySummary, totalAmount });
+            saveSales(sales);
+
+            clearTicket();
+            alert('Sale saved');
+
+            setTimeout(() => { finalizeLock = false; }, 500);
+        }
+
+        function initNowClock() { setInterval(() => { $('#nowText').textContent = new Date().toLocaleString(); }, 1000); }
+        function init() {
+            if (window._posInitialized) return;
+            window._posInitialized = true;
+
+            initNowClock();
+            fetch('menu.json').then(r => r.json()).then(data => { MENU = data; buildMenu(); });
+            $('#clearBtn').addEventListener('pointerup', clearTicket);
+            $('#finalizeBtn').addEventListener('pointerup', finalizeSale);
+        }
+        document.addEventListener('DOMContentLoaded', init);
+
+
+    </script>
+</body>
+
+</html>

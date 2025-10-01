@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sales Summary</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- SheetJS for Excel export -->
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+</head>
+
+<body class="min-h-screen bg-gray-50 text-gray-800">
+
+    <!-- Header -->
+    <header class="sticky top-0 z-10 bg-gray-800 text-white shadow">
+        <div class="mx-auto max-w-6xl px-4 py-3 flex items-center gap-3">
+            <div class="text-xl font-bold">Sales Summary</div>
+            <div class="ml-auto flex gap-3">
+                <a href="index.html"
+                    class="px-3 py-1.5 bg-emerald-600 rounded-lg text-white text-sm font-medium hover:bg-emerald-700 transition">
+                    Back to POS
+                </a>
+                <button id="clearAllBtn"
+                    class="px-3 py-1.5 bg-rose-600 rounded-lg text-white text-sm font-medium hover:bg-rose-700 transition">
+                    Clear All Sales
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main -->
+    <main class="mx-auto max-w-6xl p-4 space-y-6">
+        <!-- Summary Cards -->
+        <section class="bg-white rounded-xl shadow border border-gray-200 p-4">
+            <h2 class="text-lg font-semibold mb-3 text-gray-700">Today’s Summary</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div class="rounded-lg bg-gray-100 p-4">
+                    <div class="text-xs uppercase tracking-wide text-gray-500">Grand Total</div>
+                    <div id="summaryTotal" class="text-2xl font-bold text-gray-800">$0.00</div>
+                </div>
+                <div class="rounded-lg bg-gray-100 p-4">
+                    <div class="text-xs uppercase tracking-wide text-gray-500">Food Items</div>
+                    <div id="summaryFood" class="text-2xl font-bold text-gray-800">0</div>
+                </div>
+                <div class="rounded-lg bg-gray-100 p-4">
+                    <div class="text-xs uppercase tracking-wide text-gray-500">Drink Items</div>
+                    <div id="summaryDrink" class="text-2xl font-bold text-gray-800">0</div>
+                </div>
+            </div>
+            <div class="mt-4 flex flex-wrap gap-3">
+                <button id="exportXlsxBtn"
+                    class="px-5 py-2.5 rounded-lg font-semibold text-white bg-indigo-600 hover:bg-indigo-700 transition">
+                    Export Today’s Sales to XLSX
+                </button>
+            </div>
+        </section>
+
+        <!-- History List -->
+        <section class="bg-white rounded-xl shadow border border-gray-200 p-4">
+            <h2 class="text-lg font-semibold mb-3 text-gray-700">Today’s Transactions</h2>
+            <div class="overflow-auto border border-gray-200 rounded-lg">
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-100 text-gray-600">
+                        <tr>
+                            <th class="px-3 py-2 text-left">Time</th>
+                            <th class="px-3 py-2 text-left">Items</th>
+                            <th class="px-3 py-2 text-right">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyTable"></tbody>
+                </table>
+            </div>
+            <div id="emptyHistory" class="p-4 text-center text-gray-400 text-sm">No sales recorded today.</div>
+        </section>
+    </main>
+
+    <!-- Inline JS -->
+    <script>
+        const STORAGE_KEY = 'simplePosSales';
+        const $ = (sel) => document.querySelector(sel);
+
+        function fmtCurrency(n) { return n.toLocaleString(undefined, { style: 'currency', currency: 'USD' }); }
+        function todayStr() { return new Date().toISOString().slice(0, 10); }
+        function loadSales() { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+
+        function refreshSummary() {
+            const sales = loadSales().filter(r => r.date === todayStr());
+            const grandTotal = sales.reduce((s, r) => s + r.totalAmount, 0);
+            const food = sales.reduce((s, r) => s + (r.categorySummary.Food || 0), 0);
+            const drink = sales.reduce((s, r) => s + (r.categorySummary.Drink || 0), 0);
+            $('#summaryTotal').textContent = fmtCurrency(grandTotal);
+            $('#summaryFood').textContent = food;
+            $('#summaryDrink').textContent = drink;
+            renderHistory(sales);
+        }
+
+        function renderHistory(sales) {
+            const table = $('#historyTable');
+            table.innerHTML = '';
+            $('#emptyHistory').classList.toggle('hidden', sales.length > 0);
+
+            sales.forEach(sale => {
+                const time = new Date(sale.id).toLocaleTimeString();
+                const itemsList = sale.items.map(it => `${it.name} x${it.qty}`).join(', ');
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+          <td class="px-3 py-2">${time}</td>
+          <td class="px-3 py-2">${itemsList}</td>
+          <td class="px-3 py-2 text-right">${fmtCurrency(sale.totalAmount)}</td>
+        `;
+                table.appendChild(tr);
+            });
+        }
+
+        function exportTodayToXLSX() {
+            const sales = loadSales().filter(r => r.date === todayStr());
+            if (!sales.length) { alert('No sales today'); return; }
+
+            // Prepare rows for Excel
+            const rows = [];
+            rows.push(["Date", "Total Amount", "Food Count", "Drink Count", "Items"]);
+
+            sales.forEach(r => {
+                const itemsList = r.items.map(it => `${it.name} x${it.qty} ($${it.price})`).join("; ");
+                rows.push([
+                    r.date,
+                    r.totalAmount.toFixed(2),
+                    r.categorySummary.Food,
+                    r.categorySummary.Drink,
+                    itemsList
+                ]);
+            });
+
+            // Add Grand Totals
+            const grandTotal = sales.reduce((s, r) => s + r.totalAmount, 0);
+            const totalFood = sales.reduce((s, r) => s + (r.categorySummary.Food || 0), 0);
+            const totalDrink = sales.reduce((s, r) => s + (r.categorySummary.Drink || 0), 0);
+            rows.push([todayStr(), grandTotal.toFixed(2), totalFood, totalDrink, "TOTAL"]);
+
+            // Create worksheet & workbook
+            const ws = XLSX.utils.aoa_to_sheet(rows);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "TodaySales");
+
+            // Trigger download
+            XLSX.writeFile(wb, `sales_${todayStr()}.xlsx`);
+        }
+
+        function clearAllSales() {
+            if (confirm("Are you sure you want to clear all sales history?")) {
+                localStorage.removeItem(STORAGE_KEY);
+                refreshSummary();
+                alert("All sales history cleared!");
+            }
+        }
+
+        function init() {
+            refreshSummary();
+            $('#exportXlsxBtn').addEventListener('pointerup', exportTodayToXLSX);
+            $('#clearAllBtn').addEventListener('pointerup', clearAllSales);
+        }
+        document.addEventListener('DOMContentLoaded', init);
+
+        
+    </script>
+</body>
+
+</html>

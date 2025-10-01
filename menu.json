@@ -1,0 +1,237 @@
+[
+    {
+        "name": "Ice Americano",
+        "price": 1.75,
+        "category": "Drink"
+    },
+    {
+        "name": "Ice Cappuccino",
+        "price": 1.75,
+        "category": "Drink"
+    },
+    {
+        "name": "Ice Latte",
+        "price": 1.75,
+        "category": "Drink"
+    },
+    {
+        "name": "Ice Mocha",
+        "price": 2.00,
+        "category": "Drink"
+    },
+    {
+        "name": "Ice Lemon Black Coffee",
+        "price": 2.00,
+        "category": "Drink"
+    },
+    {
+        "name": "Ice Strawberry Soda",
+        "price": 1.75,
+        "category": "Drink"
+    },
+    {
+        "name": "Ice Lime Soda",
+        "price": 1.75,
+        "category": "Drink"
+    },
+    {
+        "name": "Ice Kiwi Soda",
+        "price": 1.75,
+        "category": "Drink"
+    },
+    {
+        "name": "Ice Blueberry Soda",
+        "price": 1.75,
+        "category": "Drink"
+    },
+    {
+        "name": "Ice Mix Berry Soda",
+        "price": 1.75,
+        "category": "Drink"
+    },
+    {
+        "name": "Ice Passion Soda",
+        "price": 1.75,
+        "category": "Drink"
+    },
+    {
+        "name": "Ice Lychee Soda",
+        "price": 1.75,
+        "category": "Drink"
+    },
+    {
+        "name": "Ice Chocolate",
+        "price": 1.75,
+        "category": "Drink"
+    },
+    {
+        "name": "Ice Strawberry Milk",
+        "price": 2.00,
+        "category": "Drink"
+    },
+    {
+        "name": "Ice Passion Milk",
+        "price": 2.00,
+        "category": "Drink"
+    },
+    {
+        "name": "Ice Matcha Latte",
+        "price": 2.00,
+        "category": "Drink"
+    },
+    {
+        "name": "Ice Matcha Strawberry",
+        "price": 2.00,
+        "category": "Drink"
+    },
+    {
+        "name": "Ice Coconut Matcha",
+        "price": 2.00,
+        "category": "Drink"
+    },
+    {
+        "name": "Ice Fresh Milk",
+        "price": 1.75,
+        "category": "Drink"
+    },
+    {
+        "name": "Ice Vanilla",
+        "price": 2.00,
+        "category": "Drink"
+    },
+    {
+        "name": "Ice Lemon Tea",
+        "price": 1.75,
+        "category": "Drink"
+    },
+    {
+        "name": "Ice Honey Lemon Tea",
+        "price": 1.75,
+        "category": "Drink"
+    },
+    {
+        "name": "Americano Frappe",
+        "price": 2.00,
+        "category": "Drink"
+    },
+    {
+        "name": "Latte Frappe",
+        "price": 2.00,
+        "category": "Drink"
+    },
+    {
+        "name": "Cappuccino Frappe",
+        "price": 2.00,
+        "category": "Drink"
+    },
+    {
+        "name": "Strawberry Frappe",
+        "price": 2.00,
+        "category": "Drink"
+    },
+    {
+        "name": "Passion Frappe",
+        "price": 2.00,
+        "category": "Drink"
+    },
+    {
+        "name": "Lychee Frappe",
+        "price": 2.00,
+        "category": "Drink"
+    },
+    {
+        "name": "Kiwi Frappe",
+        "price": 2.00,
+        "category": "Drink"
+    },
+    {
+        "name": "Blueberry Frappe",
+        "price": 2.00,
+        "category": "Drink"
+    },
+    {
+        "name": "Mix Berry Frappe",
+        "price": 2.00,
+        "category": "Drink"
+    },
+    {
+        "name": "Chocolate Frappe",
+        "price": 2.00,
+        "category": "Drink"
+    },
+    {
+        "name": "Fresh Milk Frappe",
+        "price": 2.00,
+        "category": "Drink"
+    },
+    {
+        "name": "Matcha Frappe",
+        "price": 2.00,
+        "category": "Drink"
+    },
+    {
+        "name": "Mocha Frappe",
+        "price": 2.00,
+        "category": "Drink"
+    },
+    {
+        "name": "Hot Americano",
+        "price": 1.75,
+        "category": "Drink"
+    },
+    {
+        "name": "Hot Cappuccino",
+        "price": 1.75,
+        "category": "Drink"
+    },
+    {
+        "name": "Hot Latte",
+        "price": 1.75,
+        "category": "Drink"
+    },
+    {
+        "name": "Hot Fresh Milk",
+        "price": 1.75,
+        "category": "Drink"
+    },
+    {
+        "name": "Hot Mocha",
+        "price": 1.75,
+        "category": "Drink"
+    },
+    {
+        "name": "Hot Chocolate",
+        "price": 1.75,
+        "category": "Drink"
+    },
+    {
+        "name": "Draft Beer",
+        "price": 2.50,
+        "category": "Drink"
+    },
+    {
+        "name": "Towel Beer",
+        "price": 8.00,
+        "category": "Drink"
+    },
+    {
+        "name": "French Fry",
+        "price": 2.00,
+        "category": "Food"
+    },
+    {
+        "name": "Chicken",
+        "price": 3.00,
+        "category": "Food"
+    },
+    {
+        "name": "Beer 1 Bottle",
+        "price": 2.00,
+        "category": "Drink"
+    },
+    {
+        "name": "Beer 1 Can",
+        "price": 1.50,
+        "category": "Drink"
+    }
+]
