@@ -206,7 +206,7 @@
     },
     {
         "name": "Draft Beer",
-        "price": 2.50,
+        "price": 1.25,
         "category": "Drink"
     },
     {
@@ -223,11 +223,6 @@
         "name": "Chicken",
         "price": 3.00,
         "category": "Food"
-    },
-    {
-        "name": "Beer 1 Bottle",
-        "price": 2.00,
-        "category": "Drink"
     },
     {
         "name": "Beer 1 Can",

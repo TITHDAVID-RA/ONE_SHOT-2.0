@@ -4,8 +4,12 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>ONE-SHOT</title>
+    <title>ONE-SHOT POS</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- jsPDF for PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- FileSaver fallback -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 </head>
 
 <body class="min-h-screen bg-gray-50 text-gray-800">
@@ -29,7 +33,7 @@
         <section class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
             <!-- LEFT: Menu -->
-            <div class="bg-white rounded-xl shadow border border-gray-200 p-4">
+            <div class="bg-white rounded-xl shadow border border-gray-200 p-4 overflow-y-auto max-h-[80vh]">
                 <h2 class="text-lg font-semibold mb-3 text-gray-700">Menu</h2>
                 <div class="mb-4">
                     <h3 class="text-sm font-medium text-gray-500 mb-2">Food</h3>
@@ -60,20 +64,40 @@
                     <div id="emptyTicketHint" class="p-4 text-center text-gray-400 text-sm">Add items from the menu.
                     </div>
                 </div>
+
+                <!-- Payment Method -->
+                <div class="mt-4">
+                    <label class="block text-sm font-medium text-gray-600 mb-1">Payment Method</label>
+                    <div class="flex gap-3">
+                        <button type="button" id="payCash"
+                            class="flex-1 py-2.5 rounded-lg font-semibold bg-gray-400 text-white transition">
+                            Cash
+                        </button>
+                        <button type="button" id="payABA"
+                            class="flex-1 py-2.5 rounded-lg font-semibold bg-blue-700 text-white hover:bg-blue-300 transition">
+                            ABA
+                        </button>
+                    </div>
+                </div>
+
                 <div class="mt-4 flex items-center gap-3">
                     <div class="ml-auto text-right">
                         <div class="text-xs uppercase tracking-wide text-gray-500">Total</div>
                         <div id="ticketTotal" class="text-2xl font-bold text-gray-800">$0.00</div>
                     </div>
                 </div>
-                <div class="mt-3 grid grid-cols-2 gap-3">
+                <div class="mt-3 grid grid-cols-3 gap-3">
                     <button id="clearBtn"
                         class="py-2.5 rounded-lg font-semibold bg-gray-200 text-gray-700 hover:bg-gray-300 transition">
                         Clear
                     </button>
+                    <button id="saveBtn"
+                        class="py-2.5 rounded-lg font-semibold text-white bg-blue-600 hover:bg-blue-700 transition">
+                        Save Only
+                    </button>
                     <button id="finalizeBtn"
                         class="py-2.5 rounded-lg font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition">
-                        Finalize
+                        Save & PDF
                     </button>
                 </div>
             </div>
@@ -86,6 +110,7 @@
         let MENU = [];
         let ticket = [];
         let finalizeLock = false;
+        let paymentMethod = "Cash"; // default
 
         const $ = (sel) => document.querySelector(sel);
         function fmtCurrency(n) { return n.toLocaleString(undefined, { style: 'currency', currency: 'USD' }); }
@@ -140,6 +165,89 @@
 
         function clearTicket() { ticket = []; renderTicket(); }
 
+        // PDF Receipt
+        function downloadReceiptPDF(sale) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF("p", "mm", "a4");
+
+            // Header
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(18);
+            doc.text("ONE-SHOT Cafe", 105, 20, { align: "center" });
+
+            doc.setFontSize(11);
+            doc.setFont("helvetica", "normal");
+            doc.text("One Shot Cafe, Street 608, Phnom Penh", 105, 28, { align: "center" });
+            doc.text("Tel: +855 70 553 012", 105, 34, { align: "center" });
+
+            doc.setDrawColor(180);
+            doc.line(20, 40, 190, 40);
+
+            // Info
+            doc.setFontSize(11);
+            doc.text(`Receipt ID: ${sale.id}`, 20, 50);
+            doc.text(`Date: ${new Date().toLocaleString()}`, 20, 56);
+            doc.text(`Payment: ${sale.paymentMethod}`, 20, 62);
+
+            // Table Header
+            let y = 75;
+            doc.setFont("helvetica", "bold");
+            doc.text("Item", 20, y);
+            doc.text("Qty", 120, y, { align: "right" });
+            doc.text("Price", 150, y, { align: "right" });
+            doc.text("Total", 190, y, { align: "right" });
+
+            y += 2;
+            doc.line(20, y, 190, y);
+
+            // Items
+            y += 8;
+            doc.setFont("helvetica", "normal");
+            sale.items.forEach(it => {
+                const lineTotal = (it.price * it.qty).toFixed(2);
+                doc.text(it.name, 20, y);
+                doc.text(String(it.qty), 120, y, { align: "right" });
+                doc.text(`$${it.price.toFixed(2)}`, 150, y, { align: "right" });
+                doc.text(`$${lineTotal}`, 190, y, { align: "right" });
+                y += 8;
+            });
+
+            // Total
+            y += 6;
+            doc.line(20, y, 190, y);
+            y += 12;
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(14);
+            doc.text(`TOTAL: $${sale.totalAmount.toFixed(2)}`, 190, y, { align: "right" });
+
+            y += 20;
+            doc.setFont("helvetica", "italic");
+            doc.text("Thank you for your purchase!", 105, y, { align: "center" });
+
+            const fileName = `receipt_${sale.date}_${sale.id}.pdf`;
+            doc.save(fileName);
+        }
+
+        // Save Only
+        function saveSaleOnly() {
+            if (!ticket.length) { alert('No items'); return; }
+
+            const id = Date.now(), date = todayStr();
+            const items = ticket.map(it => ({ name: it.name, price: it.price, qty: it.qty }));
+            const categorySummary = ticket.reduce((a, it) => { a[it.category] = (a[it.category] || 0) + it.qty; return a; }, { Food: 0, Drink: 0 });
+            const totalAmount = ticket.reduce((s, it) => s + (it.price * it.qty), 0);
+
+            const sale = { id, date, items, categorySummary, totalAmount, paymentMethod };
+
+            const sales = loadSales();
+            sales.push(sale);
+            saveSales(sales);
+
+            clearTicket();
+            alert('Sale saved (no PDF)');
+        }
+
+        // Save & PDF
         function finalizeSale() {
             if (finalizeLock) return;
             finalizeLock = true;
@@ -155,29 +263,49 @@
             const categorySummary = ticket.reduce((a, it) => { a[it.category] = (a[it.category] || 0) + it.qty; return a; }, { Food: 0, Drink: 0 });
             const totalAmount = ticket.reduce((s, it) => s + (it.price * it.qty), 0);
 
+            const sale = { id, date, items, categorySummary, totalAmount, paymentMethod };
+
             const sales = loadSales();
-            sales.push({ id, date, items, categorySummary, totalAmount });
+            sales.push(sale);
             saveSales(sales);
 
+            downloadReceiptPDF(sale);
             clearTicket();
-            alert('Sale saved');
+            alert('Sale saved & PDF downloaded!');
 
             setTimeout(() => { finalizeLock = false; }, 500);
         }
 
         function initNowClock() { setInterval(() => { $('#nowText').textContent = new Date().toLocaleString(); }, 1000); }
+
         function init() {
             if (window._posInitialized) return;
             window._posInitialized = true;
 
             initNowClock();
             fetch('menu.json').then(r => r.json()).then(data => { MENU = data; buildMenu(); });
+
             $('#clearBtn').addEventListener('pointerup', clearTicket);
+            $('#saveBtn').addEventListener('pointerup', saveSaleOnly);
             $('#finalizeBtn').addEventListener('pointerup', finalizeSale);
+
+            // Payment method buttons
+            $('#payCash').addEventListener('pointerup', () => {
+                paymentMethod = "Cash";
+                $('#payCash').classList.add("bg-gray-400", "text-white");
+                $('#payABA').classList.remove("bg-blue-400", "text-white");
+                $('#payABA').classList.add("bg-blue-200", "text-blue-800");
+            });
+
+            $('#payABA').addEventListener('pointerup', () => {
+                paymentMethod = "ABA";
+                $('#payABA').classList.add("bg-blue-400", "text-white");
+                $('#payCash').classList.remove("bg-gray-400", "text-white");
+                $('#payCash').classList.add("bg-gray-200", "text-gray-700");
+            });
         }
+
         document.addEventListener('DOMContentLoaded', init);
-
-
     </script>
 </body>
 

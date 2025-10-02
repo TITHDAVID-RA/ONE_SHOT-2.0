@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Sales Summary</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- SheetJS for Excel export -->
-    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <!-- jsPDF for PDF export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 
 <body class="min-h-screen bg-gray-50 text-gray-800">
@@ -49,9 +49,9 @@
                 </div>
             </div>
             <div class="mt-4 flex flex-wrap gap-3">
-                <button id="exportXlsxBtn"
+                <button id="exportPdfBtn"
                     class="px-5 py-2.5 rounded-lg font-semibold text-white bg-indigo-600 hover:bg-indigo-700 transition">
-                    Export Today’s Sales to XLSX
+                    Download End-of-Day Report (PDF)
                 </button>
             </div>
         </section>
@@ -65,6 +65,7 @@
                         <tr>
                             <th class="px-3 py-2 text-left">Time</th>
                             <th class="px-3 py-2 text-left">Items</th>
+                            <th class="px-3 py-2 text-left">Payment</th>
                             <th class="px-3 py-2 text-right">Total</th>
                         </tr>
                     </thead>
@@ -107,44 +108,92 @@
                 tr.innerHTML = `
           <td class="px-3 py-2">${time}</td>
           <td class="px-3 py-2">${itemsList}</td>
+          <td class="px-3 py-2">${sale.paymentMethod || "N/A"}</td>
           <td class="px-3 py-2 text-right">${fmtCurrency(sale.totalAmount)}</td>
         `;
                 table.appendChild(tr);
             });
         }
 
-        function exportTodayToXLSX() {
+        // Generate PDF & Download locally
+        function exportTodayToPDF() {
             const sales = loadSales().filter(r => r.date === todayStr());
             if (!sales.length) { alert('No sales today'); return; }
 
-            // Prepare rows for Excel
-            const rows = [];
-            rows.push(["Date", "Total Amount", "Food Count", "Drink Count", "Items"]);
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF("p", "mm", "a4");
 
-            sales.forEach(r => {
-                const itemsList = r.items.map(it => `${it.name} x${it.qty} ($${it.price})`).join("; ");
-                rows.push([
-                    r.date,
-                    r.totalAmount.toFixed(2),
-                    r.categorySummary.Food,
-                    r.categorySummary.Drink,
-                    itemsList
-                ]);
+            // HEADER
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(18);
+            doc.text("ONE-SHOT Cafe", 105, 20, { align: "center" });
+            doc.setFontSize(11);
+            doc.text("One Shot Cafe, Street 608, Phnom Penh", 105, 28, { align: "center" });
+            doc.text("Tel: +855 70 553 012", 105, 34, { align: "center" });
+
+            doc.setDrawColor(200);
+            doc.line(20, 40, 190, 40);
+
+            // Report title
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(14);
+            doc.text("End of Day Sales Report", 105, 50, { align: "center" });
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(11);
+            doc.text(`Date: ${todayStr()}`, 105, 58, { align: "center" });
+
+            doc.line(20, 65, 190, 65);
+
+            // Transactions
+            let y = 75;
+            sales.forEach((sale, index) => {
+                doc.setFont("helvetica", "bold");
+                doc.setFontSize(11);
+                doc.text(`Transaction #${index + 1}`, 20, y);
+                doc.setFont("helvetica", "normal");
+                doc.text(`${new Date(sale.id).toLocaleTimeString()}`, 190, y, { align: "right" });
+
+                y += 6;
+                sale.items.forEach(it => {
+                    const lineTotal = (it.price * it.qty).toFixed(2);
+                    doc.text(`- ${it.name} (x${it.qty})`, 25, y);
+                    doc.text(`$${lineTotal}`, 190, y, { align: "right" });
+                    y += 6;
+                });
+
+                doc.setFont("helvetica", "normal");
+                doc.text(`Payment: ${sale.paymentMethod || "N/A"}`, 25, y);
+                doc.setFont("helvetica", "bold");
+                doc.text(`Total: $${sale.totalAmount.toFixed(2)}`, 190, y, { align: "right" });
+
+                y += 10;
+                if (y > 270) { doc.addPage(); y = 20; }
             });
 
-            // Add Grand Totals
+            doc.line(20, y, 190, y);
+            y += 10;
+
+            // Summary totals
             const grandTotal = sales.reduce((s, r) => s + r.totalAmount, 0);
             const totalFood = sales.reduce((s, r) => s + (r.categorySummary.Food || 0), 0);
             const totalDrink = sales.reduce((s, r) => s + (r.categorySummary.Drink || 0), 0);
-            rows.push([todayStr(), grandTotal.toFixed(2), totalFood, totalDrink, "TOTAL"]);
 
-            // Create worksheet & workbook
-            const ws = XLSX.utils.aoa_to_sheet(rows);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "TodaySales");
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(13);
+            doc.text("Summary Totals", 20, y);
+            y += 8;
+            doc.setFont("helvetica", "normal");
+            doc.text(`Food Items: ${totalFood}`, 20, y); y += 6;
+            doc.text(`Drink Items: ${totalDrink}`, 20, y); y += 6;
+            doc.text(`Grand Total: $${grandTotal.toFixed(2)}`, 20, y);
 
-            // Trigger download
-            XLSX.writeFile(wb, `sales_${todayStr()}.xlsx`);
+            y += 20;
+            doc.setFont("helvetica", "italic");
+            doc.setFontSize(11);
+            doc.text("Thank you for a great day at ONE-SHOT Cafe", 105, y, { align: "center" });
+
+            const fileName = `sales_summary_${todayStr()}.pdf`;
+            doc.save(fileName);
         }
 
         function clearAllSales() {
@@ -157,12 +206,10 @@
 
         function init() {
             refreshSummary();
-            $('#exportXlsxBtn').addEventListener('pointerup', exportTodayToXLSX);
+            $('#exportPdfBtn').addEventListener('pointerup', exportTodayToPDF);
             $('#clearAllBtn').addEventListener('pointerup', clearAllSales);
         }
         document.addEventListener('DOMContentLoaded', init);
-
-        
     </script>
 </body>
 
