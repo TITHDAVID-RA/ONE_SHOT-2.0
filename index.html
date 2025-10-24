@@ -5,106 +5,170 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>ONE-SHOT POS</title>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        // Custom dark gray for card backgrounds, slightly lighter than bg-gray-900
+                        'gray-850': '#1f2937',
+                        // Custom dark gray for the sidebar, slightly darker than bg-gray-900
+                        'gray-950': '#080c10',
+                    }
+                }
+            }
+        }
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- jsPDF for PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <!-- FileSaver fallback -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 </head>
 
-<body class="min-h-screen bg-gray-50 text-gray-800">
+<body class="min-h-screen bg-gray-500 text-gray-100">
 
-    <!-- Header -->
-    <header class="bg-gray-800 text-white shadow">
-        <div class="mx-auto max-w-6xl px-4 py-3 flex items-center gap-3">
-            <img class="w-[100px] h-[50px] rounded" src="photo_2025-07-12_20-37-04.jpg">
-            <div class="ml-auto flex gap-4 items-center">
+    <div class="flex">
+
+        <aside id="sidebar" class="fixed inset-y-0 left-0 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out
+                       w-64 bg-gray-950 text-white p-0 z-40 flex flex-col shadow-xl border-r border-gray-700">
+
+            <button id="sidebarCloseBtn" class="absolute top-3 right-3 p-2 md:hidden text-gray-300 z-50">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                    </path>
+                </svg>
+            </button>
+
+            <div class="flex items-center justify-center p-4 h-[70px]">
+                <img class="w-[100px] h-[50px] rounded" src="photo_2025-07-12_20-37-04.jpg" alt="Logo">
+            </div>
+
+            <nav class="flex flex-col mt-4">
+                <a href="index.html"
+                    class="flex items-center gap-3 py-3 px-4 text-emerald-400 font-medium transition hover:bg-gray-800">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0h6" />
+                    </svg>
+                    Home
+                </a>
                 <a href="summary.html"
-                    class="px-3 py-1.5 bg-emerald-600 rounded-lg text-white text-sm font-medium hover:bg-emerald-700 transition">
+                    class="flex items-center gap-3 py-3 px-4 text-emerald-400 font-medium transition hover:bg-gray-800">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
                     Summary
                 </a>
-                <div id="nowText" class="text-sm text-gray-200 opacity-80"></div>
-            </div>
-        </div>
-    </header>
 
-    <!-- Main -->
-    <main class="mx-auto max-w-6xl p-4 space-y-6">
-        <section class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <a href="inventory.html"
+                    class="flex items-center gap-3 py-3 px-4 text-emerald-400 font-medium transition hover:bg-gray-800">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                    </svg>
+                    Inventory
+                </a>
 
-            <!-- LEFT: Menu -->
-            <div class="bg-white rounded-xl shadow border border-gray-200 p-4 overflow-y-auto max-h-[80vh]">
-                <h2 class="text-lg font-semibold mb-3 text-gray-700">Menu</h2>
-                <div class="mb-4">
-                    <h3 class="text-sm font-medium text-gray-500 mb-2">Food</h3>
-                    <div id="foodButtons" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
-                </div>
-                <div>
-                    <h3 class="text-sm font-medium text-gray-500 mb-2">Drinks</h3>
-                    <div id="drinkButtons" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
-                </div>
-            </div>
+            </nav>
 
-            <!-- RIGHT: Ticket -->
-            <div class="bg-white rounded-xl shadow border border-gray-200 p-4 flex flex-col">
-                <h2 class="text-lg font-semibold mb-3 text-gray-700">Ticket</h2>
-                <div class="flex-1 overflow-auto border border-gray-200 rounded-lg">
-                    <table class="w-full text-sm">
-                        <thead class="bg-gray-100">
-                            <tr class="text-left text-gray-600">
-                                <th class="px-3 py-2">Item</th>
-                                <th class="px-3 py-2 w-16">Qty</th>
-                                <th class="px-3 py-2 w-20">Price</th>
-                                <th class="px-3 py-2 w-24">Line Total</th>
-                                <th class="px-3 py-2 w-16"></th>
-                            </tr>
-                        </thead>
-                        <tbody id="ticketBody"></tbody>
-                    </table>
-                    <div id="emptyTicketHint" class="p-4 text-center text-gray-400 text-sm">Add items from the menu.
+            <div id="nowText" class="hidden"></div>
+        </aside>
+
+        <main class="flex-1 min-h-screen p-0 md:ml-64">
+
+            <header
+                class="bg-gray-800 text-gray-100 shadow p-3 md:hidden flex items-center justify-between z-30 border-b border-gray-700">
+                <h1 class="text-lg font-semibold">ONE-SHOT POS</h1>
+
+                <button id="sidebarToggle" class="p-2 text-gray-100 hover:text-gray-300">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 6h16M4 12h16m-7 6h7">
+                        </path>
+                    </svg>
+                </button> 
+            </header>
+            <!-- <h2 class="text-lg font-semibold mb-3 text-black">Menu</h2> -->
+            <div class="mx-auto max-w-6xl p-4 space-y-6">
+                <section class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-gray-850 rounded-xl shadow border border-gray-700 p-4 overflow-y-auto max-h-[95vh]">
+                        <h2 class="text-lg font-semibold mb-3 text-gray-200">Menu</h2>
+                        <div class="mb-4">
+                            <h3 class="text-sm font-medium text-gray-400 mb-2">Food</h3>
+                            <div id="foodButtons" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-medium text-gray-400 mb-2">Drinks</h3>
+                            <div id="drinkButtons" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
+                        </div>
                     </div>
-                </div>
-
-                <!-- Payment Method -->
-                <div class="mt-4">
-                    <label class="block text-sm font-medium text-gray-600 mb-1">Payment Method</label>
-                    <div class="flex gap-3">
-                        <button type="button" id="payCash"
-                            class="flex-1 py-2.5 rounded-lg font-semibold bg-gray-400 text-white transition">
-                            Cash
-                        </button>
-                        <button type="button" id="payABA"
-                            class="flex-1 py-2.5 rounded-lg font-semibold bg-blue-700 text-white hover:bg-blue-300 transition">
-                            ABA
-                        </button>
+            
+                    <div class="bg-gray-850 rounded-xl shadow border border-gray-700 p-4 flex flex-col">
+                        <h2 class="text-lg font-semibold mb-3 text-gray-200">Ticket</h2>
+                        <div class="flex-1 overflow-auto border border-gray-700 rounded-lg">
+                            <table class="w-full text-sm">
+                                <thead class="bg-gray-800">
+                                    <tr class="text-left text-gray-400">
+                                        <th class="px-3 py-2">Item</th>
+                                        <th class="px-3 py-2 w-16">Qty</th>
+                                        <th class="px-3 py-2 w-20">Price</th>
+                                        <th class="px-3 py-2 w-24">Line Total</th>
+                                        <th class="px-3 py-2 w-16"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="ticketBody" class="divide-y divide-gray-700"></tbody>
+                            </table>
+                            <div id="emptyTicketHint" class="p-4 text-center text-gray-500 text-sm">Add items from the
+                                menu.
+                            </div>
+                        </div>
+            
+                        <div class="mt-4">
+                            <label class="block text-sm font-medium text-gray-400 mb-1">Payment Method</label>
+                            <div class="flex gap-3">
+                                <button type="button" id="payCash"
+                                    class="flex-1 py-2.5 rounded-lg font-semibold bg-gray-400 text-white transition">
+                                    Cash
+                                </button>
+                                <button type="button" id="payABA"
+                                    class="flex-1 py-2.5 rounded-lg font-semibold bg-blue-700 text-white hover:bg-blue-600 transition">
+                                    ABA
+                                </button>
+                            </div>
+                        </div>
+            
+                        <div class="mt-4 flex items-center gap-3">
+                            <div class="ml-auto text-right">
+                                <div class="text-xs uppercase tracking-wide text-gray-400">Total</div>
+                                <div id="ticketTotal" class="text-2xl font-bold text-gray-100">$0.00</div>
+                            </div>
+                        </div>
+                        <div class="mt-3 grid grid-cols-3 gap-3">
+                            <button id="clearBtn"
+                                class="py-2.5 rounded-lg font-semibold bg-gray-700 text-gray-200 hover:bg-gray-600 transition">
+                                Clear
+                            </button>
+                            <button id="saveBtn"
+                                class="py-2.5 rounded-lg font-semibold text-white bg-blue-600 hover:bg-blue-700 transition">
+                                Save Only
+                            </button>
+                            <button id="finalizeBtn"
+                                class="py-2.5 rounded-lg font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition">
+                                Save & PDF
+                            </button>
+                        </div>
                     </div>
-                </div>
-
-                <div class="mt-4 flex items-center gap-3">
-                    <div class="ml-auto text-right">
-                        <div class="text-xs uppercase tracking-wide text-gray-500">Total</div>
-                        <div id="ticketTotal" class="text-2xl font-bold text-gray-800">$0.00</div>
-                    </div>
-                </div>
-                <div class="mt-3 grid grid-cols-3 gap-3">
-                    <button id="clearBtn"
-                        class="py-2.5 rounded-lg font-semibold bg-gray-200 text-gray-700 hover:bg-gray-300 transition">
-                        Clear
-                    </button>
-                    <button id="saveBtn"
-                        class="py-2.5 rounded-lg font-semibold text-white bg-blue-600 hover:bg-blue-700 transition">
-                        Save Only
-                    </button>
-                    <button id="finalizeBtn"
-                        class="py-2.5 rounded-lg font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition">
-                        Save & PDF
-                    </button>
-                </div>
+                </section>
             </div>
-        </section>
-    </main>
+        </main>
 
-    <!-- Inline JS -->
+        <div id="sidebarOverlay" class="fixed inset-0 bg-black opacity-50 z-30 hidden md:hidden"></div>
+    </div>
+
     <script>
         const STORAGE_KEY = 'simplePosSales';
         let MENU = [];
@@ -118,15 +182,33 @@
         function loadSales() { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
         function saveSales(arr) { localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); }
 
+        // --- Sidebar/Toggle Logic ---
+        const sidebar = $('#sidebar');
+        const toggleButton = $('#sidebarToggle');
+        const closeButton = $('#sidebarCloseBtn');
+        const overlay = $('#sidebarOverlay');
+
+        function toggleSidebar() {
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
+
+        toggleButton.addEventListener('pointerup', toggleSidebar);
+        closeButton.addEventListener('pointerup', toggleSidebar);
+        overlay.addEventListener('pointerup', toggleSidebar);
+        // ---------------------------------------------------
+
+
         // Build Menu
         function buildMenu() {
             const foodWrap = $('#foodButtons'), drinkWrap = $('#drinkButtons');
             foodWrap.innerHTML = ''; drinkWrap.innerHTML = '';
             MENU.forEach(item => {
+                // Ensure button colors are still visible against dark background
                 const btn = document.createElement('button');
                 btn.className = `w-full aspect-[7/3] text-white font-semibold rounded-lg shadow text-sm sm:text-base transition ${item.category === 'Food'
                     ? 'bg-orange-500 hover:bg-orange-600'
-                    : 'bg-gray-600 hover:bg-gray-700'
+                    : 'bg-gray-600 hover:bg-gray-700' // Using a dark gray for drinks
                     }`;
                 btn.textContent = `${item.name}\n${fmtCurrency(item.price)}`;
                 btn.style.whiteSpace = 'pre-line';
@@ -149,12 +231,14 @@
             ticket.forEach((it, idx) => {
                 const lineTotal = it.price * it.qty; total += lineTotal;
                 const tr = document.createElement('tr');
+                // Alternating row color for better readability in dark mode
+                tr.className = idx % 2 === 0 ? 'bg-gray-850' : 'bg-gray-800';
                 tr.innerHTML = `
-          <td class="px-3 py-2">${it.name}</td>
-          <td class="px-3 py-2">${it.qty}</td>
-          <td class="px-3 py-2">${fmtCurrency(it.price)}</td>
-          <td class="px-3 py-2">${fmtCurrency(lineTotal)}</td>
-          <td class="px-3 py-2 text-right"><button class="text-rose-600 hover:text-rose-800">-</button></td>`;
+            <td class="px-3 py-2 text-gray-100">${it.name}</td>
+            <td class="px-3 py-2 text-gray-100">${it.qty}</td>
+            <td class="px-3 py-2 text-gray-100">${fmtCurrency(it.price)}</td>
+            <td class="px-3 py-2 text-gray-100">${fmtCurrency(lineTotal)}</td>
+            <td class="px-3 py-2 text-right"><button class="text-rose-400 hover:text-rose-500">-</button></td>`;
                 tr.querySelector('button').addEventListener('pointerup', () => {
                     it.qty--; if (it.qty <= 0) ticket.splice(idx, 1); renderTicket();
                 });
@@ -165,118 +249,126 @@
 
         function clearTicket() { ticket = []; renderTicket(); }
 
-        // PDF Receipt
         function downloadReceiptPDF(sale) {
             const { jsPDF } = window.jspdf;
-            const doc = new jsPDF("p", "mm", "a4");
+            // Define receipt size: 80mm width (standard thermal printer)
+            const RECEIPT_WIDTH = 80;
+            const RECEIPT_HEIGHT = 200; // Arbitrary height for a starting point
 
-            // Header
-            doc.setFont("helvetica", "bold");
-            doc.setFontSize(18);
-            doc.text("ONE-SHOT Cafe", 105, 20, { align: "center" });
+            const doc = new jsPDF("p", "mm", [RECEIPT_WIDTH, RECEIPT_HEIGHT]);
+            let y = 10; // Starting Y position
 
-            doc.setFontSize(11);
-            doc.setFont("helvetica", "normal");
-            doc.text("One Shot Cafe, Street 608, Phnom Penh", 105, 28, { align: "center" });
-            doc.text("Tel: +855 70 553 012", 105, 34, { align: "center" });
-
-            doc.setDrawColor(180);
-            doc.line(20, 40, 190, 40);
-
-            // Info
-            doc.setFontSize(11);
-            doc.text(`Receipt ID: ${sale.id}`, 20, 50);
-            doc.text(`Date: ${new Date().toLocaleString()}`, 20, 56);
-            doc.text(`Payment: ${sale.paymentMethod}`, 20, 62);
-
-            // Table Header
-            let y = 75;
-            doc.setFont("helvetica", "bold");
-            doc.text("Item", 20, y);
-            doc.text("Qty", 120, y, { align: "right" });
-            doc.text("Price", 150, y, { align: "right" });
-            doc.text("Total", 190, y, { align: "right" });
-
-            y += 2;
-            doc.line(20, y, 190, y);
-
-            // Items
-            y += 8;
-            doc.setFont("helvetica", "normal");
-            sale.items.forEach(it => {
-                const lineTotal = (it.price * it.qty).toFixed(2);
-                doc.text(it.name, 20, y);
-                doc.text(String(it.qty), 120, y, { align: "right" });
-                doc.text(`$${it.price.toFixed(2)}`, 150, y, { align: "right" });
-                doc.text(`$${lineTotal}`, 190, y, { align: "right" });
-                y += 8;
-            });
-
-            // Total
-            y += 6;
-            doc.line(20, y, 190, y);
-            y += 12;
+            // --- Header ---
             doc.setFont("helvetica", "bold");
             doc.setFontSize(14);
-            doc.text(`TOTAL: $${sale.totalAmount.toFixed(2)}`, 190, y, { align: "right" });
+            doc.text("ONE-SHOT Cafe", RECEIPT_WIDTH / 2, y, { align: "center" });
+            y += 6;
 
-            y += 20;
+            doc.setFontSize(8);
+            doc.setFont("helvetica", "normal");
+            doc.text("One Shot Cafe, Street 608, Phnom Penh", RECEIPT_WIDTH / 2, y, { align: "center" });
+            y += 4;
+            doc.text("Tel: +855 70 553 012", RECEIPT_WIDTH / 2, y, { align: "center" });
+            y += 6;
+
+            // Line separator
+            doc.setDrawColor(0); // Black line
+            doc.line(5, y, RECEIPT_WIDTH - 5, y); // Line from 5mm to 75mm (80-5)
+            y += 4;
+
+            // --- Transaction Details ---
+            doc.setFontSize(8);
+            doc.text(`Receipt ID: ${sale.id}`, 5, y);
+            y += 4;
+            doc.text(`Date: ${new Date().toLocaleString()}`, 5, y);
+            y += 4;
+            doc.text(`Payment: ${sale.paymentMethod}`, 5, y);
+            y += 6;
+
+            // --- Item Table Header (Simplified) ---
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(9);
+            doc.text("Item (Qty x Price)", 5, y);
+            doc.text("Total", RECEIPT_WIDTH - 5, y, { align: "right" });
+            y += 2;
+            doc.line(5, y, RECEIPT_WIDTH - 5, y);
+            y += 4;
+
+            // --- Item List ---
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(8);
+            sale.items.forEach(it => {
+                const lineTotal = (it.price * it.qty).toFixed(2);
+                // Item name line
+                doc.text(it.name, 5, y);
+                y += 3.5;
+                // Qty x Price line (indented slightly)
+                doc.text(`${it.qty} x $${it.price.toFixed(2)}`, 7, y);
+                // Line total
+                doc.text(`$${lineTotal}`, RECEIPT_WIDTH - 5, y, { align: "right" });
+                y += 4.5;
+            });
+
+            y += 3;
+            doc.line(5, y, RECEIPT_WIDTH - 5, y);
+            y += 4;
+
+            // --- Total ---
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(10);
+            doc.text("TOTAL:", 5, y);
+            doc.text(`$${sale.totalAmount.toFixed(2)}`, RECEIPT_WIDTH - 5, y, { align: "right" });
+            y += 8;
+
+            // --- Footer ---
             doc.setFont("helvetica", "italic");
-            doc.text("Thank you for your purchase!", 105, y, { align: "center" });
+            doc.setFontSize(8);
+            doc.text("Thank you for your purchase! Sl B teh", RECEIPT_WIDTH / 2, y, { align: "center" });
+            y += 5;
 
-            const fileName = `receipt_${sale.date}_${sale.id}.pdf`;
+
+            // Ensure the document height is correctly trimmed for a cleaner receipt cut
+            if (doc.internal.pageSize.height < y + 5) {
+                doc.internal.pageSize.height = y + 5;
+            }
+
+            // --- Save ---
+            const fileName = `receipt_${new Date().toISOString().slice(0, 10)}_${sale.id}.pdf`;
             doc.save(fileName);
         }
 
-        // Save Only
         function saveSaleOnly() {
             if (!ticket.length) { alert('No items'); return; }
-
             const id = Date.now(), date = todayStr();
             const items = ticket.map(it => ({ name: it.name, price: it.price, qty: it.qty }));
             const categorySummary = ticket.reduce((a, it) => { a[it.category] = (a[it.category] || 0) + it.qty; return a; }, { Food: 0, Drink: 0 });
             const totalAmount = ticket.reduce((s, it) => s + (it.price * it.qty), 0);
-
             const sale = { id, date, items, categorySummary, totalAmount, paymentMethod };
-
-            const sales = loadSales();
-            sales.push(sale);
-            saveSales(sales);
-
-            clearTicket();
-            alert('Sale saved (no PDF)');
+            const sales = loadSales(); sales.push(sale); saveSales(sales);
+            clearTicket(); alert('Sale saved (no PDF)');
         }
 
-        // Save & PDF
         function finalizeSale() {
             if (finalizeLock) return;
             finalizeLock = true;
-
-            if (!ticket.length) {
-                alert('No items');
-                finalizeLock = false;
-                return;
-            }
-
+            if (!ticket.length) { alert('No items'); finalizeLock = false; return; }
             const id = Date.now(), date = todayStr();
             const items = ticket.map(it => ({ name: it.name, price: it.price, qty: it.qty }));
             const categorySummary = ticket.reduce((a, it) => { a[it.category] = (a[it.category] || 0) + it.qty; return a; }, { Food: 0, Drink: 0 });
             const totalAmount = ticket.reduce((s, it) => s + (it.price * it.qty), 0);
-
             const sale = { id, date, items, categorySummary, totalAmount, paymentMethod };
-
-            const sales = loadSales();
-            sales.push(sale);
-            saveSales(sales);
-
+            const sales = loadSales(); sales.push(sale); saveSales(sales);
             downloadReceiptPDF(sale);
             clearTicket();
             alert('Sale saved & PDF downloaded!');
-
             setTimeout(() => { finalizeLock = false; }, 500);
         }
 
-        function initNowClock() { setInterval(() => { $('#nowText').textContent = new Date().toLocaleString(); }, 1000); }
+        function initNowClock() {
+            const nowElement = $('#nowText');
+            nowElement.textContent = new Date().toLocaleString();
+            setInterval(() => { nowElement.textContent = new Date().toLocaleString(); }, 1000);
+        }
 
         function init() {
             if (window._posInitialized) return;
@@ -289,20 +381,39 @@
             $('#saveBtn').addEventListener('pointerup', saveSaleOnly);
             $('#finalizeBtn').addEventListener('pointerup', finalizeSale);
 
-            // Payment method buttons
+            // Function to handle payment button styles
+            function updatePaymentButtons() {
+                const cashBtn = $('#payCash');
+                const abaBtn = $('#payABA');
+
+                if (paymentMethod === "Cash") {
+                    cashBtn.classList.remove("bg-gray-700", "text-gray-200");
+                    cashBtn.classList.add("bg-gray-400", "text-white"); // Selected color (medium gray)
+
+                    abaBtn.classList.remove("bg-blue-400");
+                    abaBtn.classList.add("bg-blue-700", "hover:bg-blue-600"); // Unselected color
+                } else { // ABA
+                    cashBtn.classList.remove("bg-gray-400", "text-white");
+                    cashBtn.classList.add("bg-gray-700", "text-gray-200"); // Unselected color (dark gray)
+
+                    abaBtn.classList.remove("bg-blue-700", "hover:bg-blue-600");
+                    abaBtn.classList.add("bg-blue-400"); // Selected color (lighter blue)
+                }
+            }
+
             $('#payCash').addEventListener('pointerup', () => {
                 paymentMethod = "Cash";
-                $('#payCash').classList.add("bg-gray-400", "text-white");
-                $('#payABA').classList.remove("bg-blue-400", "text-white");
-                $('#payABA').classList.add("bg-blue-200", "text-blue-800");
+                updatePaymentButtons();
             });
 
             $('#payABA').addEventListener('pointerup', () => {
                 paymentMethod = "ABA";
-                $('#payABA').classList.add("bg-blue-400", "text-white");
-                $('#payCash').classList.remove("bg-gray-400", "text-white");
-                $('#payCash').classList.add("bg-gray-200", "text-gray-700");
+                updatePaymentButtons();
             });
+
+            // Initial button state setup for dark mode
+            updatePaymentButtons();
+
         }
 
         document.addEventListener('DOMContentLoaded', init);

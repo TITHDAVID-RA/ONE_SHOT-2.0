@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Inventory Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Custom Tailwind config for a deep dark mode
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'gray-950': '#0d1117',
+                        'gray-850': '#1f2937',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar for dark mode table */
+        #inventoryTableContainer::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #inventoryTableContainer::-webkit-scrollbar-thumb {
+            background-color: #4b5563;
+            /* Gray-600 */
+            border-radius: 4px;
+        }
+
+        #inventoryTableContainer::-webkit-scrollbar-track {
+            background: #1f2937;
+            /* Gray-800 */
+        }
+    </style>
+</head>
+
+<body class="min-h-screen bg-gray-900 text-gray-100">
+
+    <div class="flex">
+
+        <aside id="sidebar" class="fixed inset-y-0 left-0 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out
+                       w-64 bg-gray-950 text-white p-0 z-40 flex flex-col shadow-xl border-r border-gray-700">
+
+            <div class="flex items-center justify-center p-4 h-[70px]">
+                <img class="w-[100px] h-[50px] rounded" src="photo_2025-07-12_20-37-04.jpg" alt="Logo">
+            </div>
+
+            <nav class="flex flex-col mt-4">
+                <a href="index.html"
+                    class="flex items-center gap-3 py-3 px-4 text-emerald-400 font-medium transition hover:bg-gray-800">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0h6" />
+                    </svg>
+                    Home
+                </a>
+
+                <a href="summary.html"
+                    class="flex items-center gap-3 py-3 px-4 text-emerald-400 font-medium transition hover:bg-gray-800">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    Summary
+                </a>
+
+                <a href="inventory.html"
+                    class="flex items-center gap-3 py-3 px-4 bg-gray-800 text-emerald-400 font-medium transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                    </svg>
+                    Inventory
+                </a>
+
+            </nav>
+        </aside>
+
+        <main class="flex-1 min-h-screen p-4 md:ml-64">
+            <div class="mx-auto max-w-6xl space-y-6">
+                <h1 class="text-3xl font-bold text-gray-100 mb-6">Inventory Management</h1>
+
+                <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                    <div class="lg:col-span-1 bg-gray-850 rounded-xl shadow border border-gray-700 p-6 h-fit">
+                        <h2 class="text-xl font-semibold text-gray-200 mb-4">Add New Item</h2>
+                        <form id="addItemForm" class="space-y-4">
+                            <div>
+                                <label for="name" class="block text-sm font-medium text-gray-400">Item Name</label>
+                                <input type="text" id="name" name="name" required
+                                    class="mt-1 block w-full rounded-md border-gray-600 bg-gray-800 text-gray-100 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 sm:text-sm p-2">
+                            </div>
+
+                            <div>
+                                <label for="category" class="block text-sm font-medium text-gray-400">Category</label>
+                                <select id="category" name="category" required
+                                    class="mt-1 block w-full rounded-md border-gray-600 bg-gray-800 text-gray-100 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 sm:text-sm p-2">
+                                    <option value="Food">កេស</option>
+                                    <option value="Drink">ជុង</option>
+                                    <option value="Drink">ធុង</option>
+                                    <option value="Drink">កំប៉ុង</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label for="price" class="block text-sm font-medium text-gray-400">Price (USD)</label>
+                                <input type="number" id="price" name="price" required min="0.01" step="0.01"
+                                    class="mt-1 block w-full rounded-md border-gray-600 bg-gray-800 text-gray-100 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 sm:text-sm p-2">
+                            </div>
+
+                            <div>
+                                <label for="stock" class="block text-sm font-medium text-gray-400">Initial Stock</label>
+                                <input type="number" id="stock" name="stock" required min="0" step="1" value="0"
+                                    class="mt-1 block w-full rounded-md border-gray-600 bg-gray-800 text-gray-100 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 sm:text-sm p-2">
+                            </div>
+
+                            <button type="submit"
+                                class="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition">
+                                Add Item to Inventory
+                            </button>
+                        </form>
+                    </div>
+
+                    <div class="lg:col-span-2 bg-gray-850 rounded-xl shadow border border-gray-700 p-6 flex flex-col">
+                        <h2 class="text-xl font-semibold text-gray-200 mb-4">Current Inventory</h2>
+
+                        <div id="inventoryTableContainer"
+                            class="flex-1 overflow-y-auto max-h-[70vh] border border-gray-700 rounded-lg">
+                            <table class="min-w-full divide-y divide-gray-700">
+                                <thead class="bg-gray-800 sticky top-0">
+                                    <tr>
+                                        <th
+                                            class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                            Name
+                                        </th>
+                                        <th
+                                            class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider w-24">
+                                            Category
+                                        </th>
+                                        <th
+                                            class="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider w-24">
+                                            Stock
+                                        </th>
+                                        <th
+                                            class="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider w-24">
+                                            Price
+                                        </th>
+                                        <th
+                                            class="px-4 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider w-32">
+                                            Adjust Stock
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody id="inventoryBody" class="bg-gray-800 divide-y divide-gray-700">
+                                </tbody>
+                            </table>
+                            <div id="emptyInventoryHint" class="p-4 text-center text-gray-500 text-sm hidden">
+                                No items found in inventory.
+                            </div>
+                        </div>
+
+                    </div>
+
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const INVENTORY_KEY = 'simplePosInventory';
+        const $ = (sel) => document.querySelector(sel);
+        function fmtCurrency(n) { return n.toLocaleString(undefined, { style: 'currency', currency: 'USD' }); }
+
+        // --- Data Loading and Saving ---
+
+        function loadInventory() {
+            const storedData = localStorage.getItem(INVENTORY_KEY);
+            if (storedData) {
+                return JSON.parse(storedData);
+            }
+
+            // Fallback: Default data with stock quantity
+            return [
+            { name: "Cambodia Beer", category: "កេស", price: 20, stock: 5 },
+                        { name: "Cambodia Beer", category: "កេស", price: 20, stock: 5 },
+            { name: "Angkor Beer", category: "កេស", price: 18, stock: 8 },
+            { name: "Water Bottle", category: "ជុង", price: 2, stock: 50 },
+            { name: "Soda Can", category: "កំប៉ុង", price: 3, stock: 30 }
+            
+            ];
+        }
+
+        function saveInventory(inventory) {
+            localStorage.setItem(INVENTORY_KEY, JSON.stringify(inventory));
+        }
+
+        // --- UI Rendering ---
+
+        function renderInventory() {
+            const inventory = loadInventory();
+            const body = $('#inventoryBody');
+            body.innerHTML = '';
+
+            $('#emptyInventoryHint').classList.toggle('hidden', inventory.length > 0);
+
+            inventory.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                tr.className = index % 2 === 0 ? 'bg-gray-800' : 'bg-gray-850';
+
+                // Highlight low stock (<= 10)
+                const stockClass = item.stock <= 10 ? 'text-rose-400 font-bold' : 'text-gray-200';
+
+                // Disable minus button if stock is 0
+                const minusDisabled = item.stock <= 0 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-rose-700';
+
+                tr.innerHTML = `
+                    <td class="px-4 py-3 text-sm font-medium text-gray-100">${item.name}</td>
+                    <td class="px-4 py-3 text-sm text-gray-400">${item.category}</td>
+                    <td class="px-4 py-3 text-sm ${stockClass} text-right">${item.stock}</td>
+                    <td class="px-4 py-3 text-sm text-gray-400 text-right">${fmtCurrency(item.price)}</td>
+                    <td class="px-4 py-3 text-center">
+                        <div class="flex justify-center space-x-2">
+                            <button data-index="${index}" data-change="-1"
+                                class="adjust-btn w-8 h-8 rounded-md bg-rose-600 text-white font-bold transition ${minusDisabled}">
+                                -
+                            </button>
+                            <button data-index="${index}" data-change="1"
+                                class="adjust-btn w-8 h-8 rounded-md bg-emerald-600 text-white font-bold transition hover:bg-emerald-700">
+                                +
+                            </button>
+                        </div>
+                    </td>
+                `;
+                body.appendChild(tr);
+            });
+
+            // Re-attach listeners after rendering
+            document.querySelectorAll('.adjust-btn').forEach(button => {
+                button.addEventListener('click', adjustStock);
+            });
+        }
+
+        // --- Actions ---
+
+        function addItem(event) {
+            event.preventDefault(); // Stop form submission
+
+            const form = event.target;
+            const name = form.name.value.trim();
+            const category = form.category.value;
+            const price = parseFloat(form.price.value);
+            const stock = parseInt(form.stock.value); // Get stock value
+
+            if (!name || isNaN(price) || price <= 0 || isNaN(stock) || stock < 0) {
+                alert("Please enter a valid name, price, and initial stock quantity (must be 0 or greater).");
+                return;
+            }
+
+            const newItem = {
+                name: name,
+                category: category,
+                price: price,
+                stock: stock
+            };
+
+            const inventory = loadInventory();
+            // Check for duplicates
+            const isDuplicate = inventory.some(item =>
+                item.name.toLowerCase() === newItem.name.toLowerCase() && item.category === newItem.category
+            );
+
+            if (isDuplicate) {
+                alert(`"\${newItem.name}" (\${newItem.category}) already exists in the inventory.`);
+                return;
+            }
+
+            inventory.push(newItem);
+            saveInventory(inventory);
+            renderInventory();
+
+            form.reset(); // Clear the form
+        }
+        
+        // NEW FUNCTION: Adjust Stock
+        function adjustStock(event) {
+            const index = parseInt(event.target.getAttribute('data-index'));
+            const change = parseInt(event.target.getAttribute('data-change')); // +1 or -1
+
+            const inventory = loadInventory();
+            const item = inventory[index];
+            
+            if (!item) return;
+
+            // Prevent stock from going below zero
+            if (change < 0 && item.stock <= 0) {
+                return; 
+            }
+
+            item.stock += change;
+            
+            // Ensure stock never goes negative (for safety, even though the check above exists)
+            if (item.stock < 0) {
+                item.stock = 0;
+            }
+
+            saveInventory(inventory);
+            renderInventory(); // Re-render the list to update the display
+        }
+        
+        // Removed removeItem function as it's no longer used by the UI buttons
+
+        // --- Initialization ---
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Set up form submission handler
+            $('#addItemForm').addEventListener('submit', addItem);
+
+            // Load and display inventory initially
+            renderInventory();
+        });
+    </script>
+</body>
+
+</html>
